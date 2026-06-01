@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Contenido — Innova ESAN</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+    header { background: #1a1a2e; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 12px; }
+    header h1 { color: white; font-size: 18px; font-weight: 600; }
+    .badge { background: #e8522a; color: white; font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+    .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 1rem; color: #1a1a2e; }
+    label { font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
+    textarea { width: 100%; min-height: 90px; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; font-family: inherit; }
+    textarea:focus, input:focus, select:focus { outline: none; border-color: #e8522a; }
+    input[type="text"], select { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag { font-size: 12px; background: #fff3ef; color: #e8522a; border: 1px solid #f5c4b8; border-radius: 20px; padding: 4px 12px; cursor: pointer; }
+    .tag:hover { background: #ffe0d6; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .btn-generate { width: 100%; padding: 12px; background: #e8522a; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-generate:hover { background: #c94420; }
+    .btn-generate:disabled { background: #ccc; cursor: not-allowed; }
+    .status { text-align: center; font-size: 13px; color: #888; margin-top: 8px; min-height: 20px; }
+    .results { display: none; }
+    .channel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .channel { background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 1rem; }
+    .channel-header { font-size: 13px; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .channel-body { font-size: 13px; line-height: 1.7; color: #333; white-space: pre-wrap; word-break: break-word; min-height: 80px; }
+    .btn-copy { margin-top: 10px; width: 100%; padding: 7px; background: white; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; cursor: pointer; }
+    .btn-copy:hover { background: #f0f0f0; }
+    .btn-regen { margin-top: 1rem; padding: 9px 20px; background: white; border: 1px solid #e8522a; color: #e8522a; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    .btn-regen:hover { background: #fff3ef; }
+    .error { background: #fff0f0; color: #c0392b; border: 1px solid #f5c6c6; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 8px; display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Generador de Contenido</h1>
+  <span class="badge">Innova ESAN</span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>📝 Contexto del evento</h2>
+    <label>¿Qué pasó? (nombre, fecha, participantes, logros)</label>
+    <textarea id="contexto" placeholder="Ej: Feria del Día del Padre, 8 de junio. Más de 80 emprendedores, sorteos y premios. Realizada en la Explanada JC de ESAN."></textarea>
+    <div class="tag-row">
+      <span class="tag" onclick="addTag('Feria de emprendimiento')">Feria de emprendimiento</span>
+      <span class="tag" onclick="addTag('Taller de innovación')">Taller de innovación</span>
+      <span class="tag" onclick="addTag('Premiación de equipos')">Premiación de equipos</span>
+      <span class="tag" onclick="addTag('Workshop con externos')">Workshop con externos</span>
+      <span class="tag" onclick="addTag('Lanzamiento de programa')">Lanzamiento de programa</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Configuración</h2>
+    <div class="grid2">
+      <div>
+        <label>Tono general</label>
+        <select id="tono">
+          <option value="inspirador">Inspirador y motivador</option>
+          <option value="informativo">Informativo y directo</option>
+          <option value="celebratorio">Celebratorio y emocionante</option>
+          <option value="profesional">Profesional e institucional</option>
+        </select>
+      </div>
+      <div>
+        <label>Hashtags fijos</label>
+        <input type="text" id="hashtags" value="#InnovaESAN #Emprendimiento #ESAN">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-generate" id="genBtn" onclick="generar()">✨ Generar contenido</button>
+  <p class="status" id="status"></p>
+  <div class="error" id="errorBox"></div>
+
+  <div class="results" id="results">
+    <div class="card" style="margin-top:1.25rem;">
+      <h2>📣 Copy por red social</h2>
+      <div class="channel-grid">
+        <div class="channel">
+          <div class="channel-header">📸 Instagram</div>
+          <div class="channel-body" id="copyIG">—</div>
+          <button class="btn-copy" onclick="copiar('copyIG', this)">Copiar</button>
+        </div>
+        <div class="channel">
+          <div class="channel-header">💼 LinkedIn</div>
+          <div class="channel-body" id="copyLI">—</div>
+          <button class="btn-copy" onclick="copiar('copyLI', this)">Copiar</button>
+        </div>
+        <div class="channel">
+          <div class="channel-header">💬 WhatsApp</div>
+          <div class="channel-body" id="copyWA">—</div>
+          <button class="btn-copy" onclick="copiar('copyWA', this)">Copiar</button>
+        </div>
+      </div>
+      <button class="btn-regen" onclick="generar()">↻ Regenerar</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  function addTag(text) {
+    const ta = document.getElementById('contexto');
+    ta.value = ta.value ? ta.value + '. ' + text : text;
+    ta.focus();
+  }
+
+  function copiar(id, btn) {
+    navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
+      btn.textContent = '✓ Copiado';
+      setTimeout(() => btn.textContent = 'Copiar', 2000);
+    });
+  }
+
+  async function generar() {
+    const contexto = document.getElementById('contexto').value.trim();
+    const tono = document.getElementById('tono').value;
+    const hashtags = document.getElementById('hashtags').value.trim();
+    const btn = document.getElementById('genBtn');
+    const status = document.getElementById('status');
+    const errorBox = document.getElementById('errorBox');
+
+    errorBox.style.display = 'none';
+    if (!contexto) { status.textContent = 'Escribe el contexto del evento primero.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Generando...';
+    status.textContent = 'Consultando Gemini...';
+    document.getElementById('results').style.display = 'none';
+
+    try {
+      const res = await fetch('/api/generar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contexto, tono, hashtags })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Error del servidor');
+
+      document.getElementById('copyIG').textContent = data.instagram || '—';
+      document.getElementById('copyLI').textContent = data.linkedin || '—';
+      document.getElementById('copyWA').textContent = data.whatsapp || '—';
+      document.getElementById('results').style.display = 'block';
+      status.textContent = 'Listo. Revisa y edita antes de publicar.';
+
+    } catch (err) {
+      errorBox.textContent = 'Error: ' + err.message;
+      errorBox.style.display = 'block';
+      status.textContent = '';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '✨ Generar contenido';
+  }
+</script>
+
+</body>
+</html>
