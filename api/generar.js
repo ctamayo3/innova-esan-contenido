@@ -34,7 +34,7 @@ Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin markdo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.8, responseMimeType: 'application/json' }
+          generationConfig: { temperature: 0.8 }
         })
       }
     );
