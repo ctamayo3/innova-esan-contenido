@@ -45,7 +45,15 @@ Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin markdo
 
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+      else return res.status(500).json({ error: 'No se pudo parsear la respuesta: ' + clean });
+    }
 
     res.status(200).json(parsed);
   } catch (err) {
