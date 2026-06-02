@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   const { contexto, tono, hashtags } = req.body;
-
   if (!contexto) return res.status(400).json({ error: 'Falta el contexto del evento' });
 
   const tonoDesc = {
@@ -27,32 +26,33 @@ Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin markdo
 {"instagram":"copy con emojis, máx 120 palabras, hashtags fijos + 3-4 relevantes","linkedin":"copy profesional sin emojis, máx 100 palabras, solo hashtags fijos al final","whatsapp":"copy breve máx 50 palabras, conversacional, sin hashtags, 1-2 emojis"}`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.8 }
-        })
-      }
-    );
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
     const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || 'Error de API');
 
-    if (!response.ok) throw new Error(data.error?.message || 'Error de Gemini');
-
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const raw = data.content?.[0]?.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
-    
+
     let parsed;
     try {
       parsed = JSON.parse(clean);
     } catch(e) {
       const match = clean.match(/\{[\s\S]*\}/);
       if (match) parsed = JSON.parse(match[0]);
-      else return res.status(500).json({ error: 'No se pudo parsear la respuesta: ' + clean });
+      else return res.status(500).json({ error: 'No se pudo parsear: ' + clean });
     }
 
     res.status(200).json(parsed);
